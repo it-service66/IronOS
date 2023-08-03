@@ -63,6 +63,7 @@ enum class SettingsItemIndex : uint8_t {
   TempChangeShortStep,
   TempChangeLongStep,
   LockingMode,
+#ifdef PROFILE_SUPPORT
   ProfilePhases,
   ProfilePreheatTemp,
   ProfilePreheatSpeed,
@@ -77,6 +78,7 @@ enum class SettingsItemIndex : uint8_t {
   ProfilePhase5Temp,
   ProfilePhase5Duration,
   ProfileCooldownSpeed,
+#endif
   MotionSensitivity,
   SleepTemperature,
   SleepTimeout,

@@ -1,3 +1,4 @@
+#ifdef PROFILE_SUPPORT
 
 #include "OperatingModes.h"
 #include "SolderingCommon.h"
@@ -221,3 +222,5 @@ void gui_solderingProfileMode() {
     GUIDelay();
   }
 }
+
+#endif /* PROFILE_SUPPORT */
