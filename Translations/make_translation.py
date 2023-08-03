@@ -1277,19 +1277,13 @@ def get_translation_sanity_checks_text(defs: dict) -> str:
             sanity_checks_text += "#endif\n"
             sanity_checks_text += "#define OFFSET_PROFILE 14\n"
             sanity_checks_text += "#endif /* PROFILE_SUPPORT */\n"
+
     sanity_checks_text += f"static_assert(static_cast<uint8_t>(SettingsItemIndex::NUM_ITEMS) == {len(defs['menuOptions'])} - OFFSET_PROFILE);\n"
     return sanity_checks_text
 
 
 def get_version_suffix(ver) -> str:
-    # Check env var from push.yml first:
-    # - if it's pull request then use vX.YY + C.ID for version line as in *C*I with proper tag instead of merge tag for detached tree
-    if os.environ.get("GITHUB_CI_PR_SHA", "") != "":
-        return "C" + "." + os.environ["GITHUB_CI_PR_SHA"][:8].upper()
-    # - no github PR SHA ID, hence keep checking
-
     suffix = str("")
-
     try:
         # Use commands _hoping_ they won't be too new for one environments nor deprecated for another ones:
         ## - get commit id; --short=8 - the shorted hash with 8 digits (increase/decrease if needed!)
@@ -1324,11 +1318,9 @@ def get_version_suffix(ver) -> str:
     except OSError:
         # Something _special_?
         suffix = "S"
-
     if "" == suffix:
         # Something _very_ special!
         suffix = "V"
-
     return suffix
 
 
