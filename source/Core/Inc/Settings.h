@@ -9,8 +9,10 @@
 
 #ifndef SETTINGS_H_
 #define SETTINGS_H_
+
 #include <stdbool.h>
 #include <stdint.h>
+
 #define SETTINGSVERSION (0x2A) // This number is frozen, do not edit
 
 enum SettingsOptions {
@@ -53,6 +55,7 @@ enum SettingsOptions {
   CalibrateCJC                   = 36, // Toggle calibrate CJC at next boot
   BluetoothLE                    = 37, // Toggle BLE if present
   PDVpdo                         = 38, // Toggle PPS & EPR
+
 #ifdef PROFILE_SUPPORT
   ProfilePhases                      , // Number of profile mode phases
   ProfilePreheatTemp                 , // Temperature to preheat to before the first phase
@@ -69,8 +72,9 @@ enum SettingsOptions {
   ProfilePhase5Duration              , // Target duration for phase 5
   ProfileCooldownSpeed               , // Maximum allowed cooldown speed in degrees per second
 #endif
-  //
-  SettingsOptionsLength, //
+
+  // ENDING MARKER WITH TOTAL LENGTH of ALL COMPILED-IN OPTIONS
+  SettingsOptionsLength
 };
 
 typedef enum {
