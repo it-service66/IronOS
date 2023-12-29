@@ -146,6 +146,7 @@
 #define MIN_BOOST_TEMP_F           480                       // The min settable temp for boost mode °F
 #define DEVICE_HAS_VALIDATION_CODE                           // We have 2 digit validations
 #define POW_PD                     1                         // Supported features
+#define USB_PD_EPR_WATTAGE         140                       // USB PD EPR Wattage
 #define POW_PD_EXT                 0                         // Future-proof macro for other models with other PD modes
 #define POW_QC                     1                         // Supported features
 #define POW_DC                     1                         // Supported features
@@ -160,11 +161,16 @@
 #define HALL_SI7210
 #define DEBUG_UART_OUTPUT
 #define HAS_POWER_DEBUG_MENU
-#define HARDWARE_MAX_WATTAGE_X10 750
-#define TIP_THERMAL_MASS         65 // X10 watts to raise 1 deg C in 1 second
-#define BLE_ENABLED
-#define NEEDS_VBUS_PROBE 0
-#define CANT_DIRECT_READ_SETTINGS
+#define HARDWARE_MAX_WATTAGE_X10  750
+#define BLE_ENABLED                   // We have a BLE stack
+#define NEEDS_VBUS_PROBE          0   // No vbus probe, its not connected in pcb
+#define CANT_DIRECT_READ_SETTINGS     // We cant memcpy settings due to flash cache
+#define TIP_CONTROL_PID               // We use PID rather than integrator
+#define TIP_PID_KP                45  // Reasonable compromise for most tips so far
+#define TIP_PID_KI                9   // About as high for stability across tips
+#define TIP_PID_KD                200 // Helps dampen smaller tips; ~= nothing for larger tips
+#define FILTER_DISPLAYED_TIP_TEMP 8   // Filtering for GUI display
+
 #endif /* Pinecilv2 */
 
 #define FLASH_PAGE_SIZE (1024) // Read pages

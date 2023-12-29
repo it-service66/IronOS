@@ -14,10 +14,6 @@ ADC_HandleTypeDef hadc1;
 ADC_HandleTypeDef hadc2;
 DMA_HandleTypeDef hdma_adc1;
 
-I2C_HandleTypeDef hi2c1;
-DMA_HandleTypeDef hdma_i2c1_rx;
-DMA_HandleTypeDef hdma_i2c1_tx;
-
 IWDG_HandleTypeDef hiwdg;
 TIM_HandleTypeDef  htim4; // Tip control
 TIM_HandleTypeDef  htim2; // ADC Scheduling
@@ -28,7 +24,6 @@ uint16_t ADCReadings[ADC_SAMPLES]; // Used to store the adc readings for the han
 // Functions
 static void SystemClock_Config(void);
 static void MX_ADC1_Init(void);
-static void MX_I2C1_Init(void);
 static void MX_IWDG_Init(void);
 static void MX_TIM4_Init(void); // Tip control
 static void MX_TIM2_Init(void); // ADC Scheduling
@@ -44,9 +39,6 @@ void        Setup_HAL() {
 
   // These are not shared so no harm enabling
   __HAL_AFIO_REMAP_SWJ_NOJTAG();
-#ifdef SCL_Pin
-  MX_I2C1_Init();
-#endif
   MX_GPIO_Init();
   MX_DMA_Init();
   MX_ADC1_Init();
@@ -249,33 +241,6 @@ static void MX_ADC2_Init(void) {
     ;
   }
 }
-/* I2C1 init function */
-static void MX_I2C1_Init(void) {
-  hi2c1.Instance        = I2C1;
-  hi2c1.Init.ClockSpeed = 200000;
-  // OLED doesnt handle >100k when its asleep (off).
-  hi2c1.Init.DutyCycle       = I2C_DUTYCYCLE_16_9;
-  hi2c1.Init.OwnAddress1     = 0;
-  hi2c1.Init.AddressingMode  = I2C_ADDRESSINGMODE_7BIT;
-  hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
-  hi2c1.Init.OwnAddress2     = 0;
-  hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
-  hi2c1.Init.NoStretchMode   = I2C_NOSTRETCH_DISABLE;
-  __HAL_I2C_DISABLE(&hi2c1);
-
-  __HAL_RCC_I2C1_CLK_ENABLE();
-
-  // 13. Set SWRST bit in I2Cx_CR1 register.
-  hi2c1.Instance->CR1 |= 0x8000;
-
-  asm("nop");
-
-  // 14. Clear SWRST bit in I2Cx_CR1 register.
-  hi2c1.Instance->CR1 &= ~0x8000;
-
-  HAL_I2C_Init(&hi2c1);
-  unstick_I2C();
-}
 
 /* IWDG init function */
 static void MX_IWDG_Init(void) {
@@ -445,8 +410,8 @@ static void MX_GPIO_Init(void) {
   GPIO_InitStruct.Pin  = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3 | GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7 | GPIO_PIN_8 | GPIO_PIN_9 | GPIO_PIN_10 | GPIO_PIN_15;
   GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-  GPIO_InitStruct.Pin = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3 | GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7 | GPIO_PIN_8 | GPIO_PIN_9 | GPIO_PIN_10 | GPIO_PIN_11 | GPIO_PIN_12
-                        | GPIO_PIN_13 | GPIO_PIN_14 | GPIO_PIN_15;
+  GPIO_InitStruct.Pin = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3 | GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7 | GPIO_PIN_8 | GPIO_PIN_9 | GPIO_PIN_10 | GPIO_PIN_11 | GPIO_PIN_12 |
+                        GPIO_PIN_13 | GPIO_PIN_14 | GPIO_PIN_15;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /*Configure GPIO pins : KEY_B_Pin KEY_A_Pin */

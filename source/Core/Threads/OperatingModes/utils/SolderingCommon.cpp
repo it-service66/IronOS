@@ -4,6 +4,8 @@
 
 #include "SolderingCommon.h"
 #include "OperatingModes.h"
+#include "configuration.h"
+#include "history.hpp"
 
 extern bool heaterThermalRunaway;
 
@@ -94,8 +96,10 @@ bool checkExitSoldering(void) {
         // If we have moved recently; in the last second
         // Then exit soldering mode
 
-        if (((TickType_t)(xTaskGetTickCount() - lastMovementTime)) < (TickType_t)(TICKS_SECOND)) {
+        // Movement occurred in last update
+        if (((TickType_t)(xTaskGetTickCount() - lastMovementTime)) < (TickType_t)(TICKS_SECOND / 5)) {
           currentTempTargetDegC = 0;
+          lastMovementTime      = 0;
           return true;
         }
       }
@@ -108,6 +112,8 @@ bool checkExitSoldering(void) {
   if (shouldShutdown()) {
     // shutdown
     currentTempTargetDegC = 0;
+    lastMovementTime      = xTaskGetTickCount(); // We manually move the movement time to now such that shutdown timer is reset
+
     return true; // we want to exit soldering mode
   }
 #endif
@@ -162,4 +168,14 @@ int8_t getPowerSourceNumber(void) {
 }
 
 // Returns temperature of the tip in *C/*F (based on user settings)
-uint16_t getTipTemp(void) { return getSettingValue(SettingsOptions::TemperatureInF) ? TipThermoModel::getTipInF() : TipThermoModel::getTipInC(); }
+TemperatureType_t getTipTemp(void) {
+#ifdef FILTER_DISPLAYED_TIP_TEMP
+  static history<TemperatureType_t, FILTER_DISPLAYED_TIP_TEMP> Filter_Temp;
+  TemperatureType_t                                            reading = getSettingValue(SettingsOptions::TemperatureInF) ? TipThermoModel::getTipInF() : TipThermoModel::getTipInC();
+  Filter_Temp.update(reading);
+  return Filter_Temp.average();
+
+#else
+  return getSettingValue(SettingsOptions::TemperatureInF) ? TipThermoModel::getTipInF() : TipThermoModel::getTipInC();
+#endif
+}

@@ -32,8 +32,8 @@
  * How many seconds/minutes we wait until going to sleep/shutdown.
  * Values -> SLEEP_TIME * 10; i.e. 5*10 = 50 Seconds!
  */
-#define SLEEP_TIME    5  // x10 Seconds
-#define SHUTDOWN_TIME 10 // Minutes
+#define SLEEP_TIME    5 // x10 Seconds
+#define SHUTDOWN_TIME 0 // Minutes -- Default shutdown to being off
 
 /**
  * Auto start off for safety.
@@ -155,10 +155,14 @@
 
 //#define PROFILE_SUPPORT
 
-#define POW_PD     1
-#define POW_PD_EXT 0
+#define POW_PD             1
+#define POW_PD_EXT         0
+#define USB_PD_EPR_WATTAGE 0 /*No EPR*/
 #define TEMP_NTC
-#define I2C_SOFT_BUS_2
+#define I2C_SOFT_BUS_2  1
+#define I2C_SOFT_BUS_1  1
+#define OLED_I2CBB1     1
+#define ACCEL_I2CBB1    1
 #define BATTFILTERDEPTH 8
 #define OLED_I2CBB2
 #define ACCEL_EXITS_ON_MOVEMENT

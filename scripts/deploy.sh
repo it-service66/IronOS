@@ -17,7 +17,7 @@ usage()
 	echo "CMD (docker related):"
 	echo -e "\tshell - start docker container with shell inside to work on IronOS with all tools needed"
 	echo -e "\tbuild - compile builds of IronOS inside docker container for supported hardware"
-	echo -e "\tclean - delete created docker container (but not pre-downloaded data for it)\n"
+	echo -e "\tclean - delete created docker image for IronOS & its build cache objects\n"
 	echo "CMD (helper routines):"
 	echo -e "\tdocs_readme - generate & OVERWRITE(!) README.md inside Documentation/ based on nav section from mkdocs.yml if it changed\n"
 	echo -e "\tcheck_style_file SRC - run code style checks based on clang-format & custom parsers for source code file SRC\n"
@@ -90,21 +90,6 @@ check_style_file()
 			echo "${src}"
 		fi;
 		ret=1
-	fi;
-	# - clang-format has neat option for { } in condition blocks but it's available only since version 15:
-	#   * https://clang.llvm.org/docs/ClangFormatStyleOptions.html#insertbraces
-	# - since reference env is alpine 3.16 with clang-format 13, implement custom parser to do the similar thing here with grep:
-	#   it used to trace missing { and } for if/else/do/while/for BUT IT'S VERY SPECULATIVE, very-very hacky & dirty.
-	# - if file is problematic but filename only requested make final grep in pipe silent ... UPD: make code messy but shellcheck happy
-	if [ -z "${LIST}" ]; then
-		grep -H -n  -e "^ .*if .*)$"  -e "^ .*else$"  -e "^ .* do$"  -e "^ .*while .*)$"  -e "^ .*for .*)$"  "${src}" | grep -v  -e "^.*//"  -e "^.*:.*: .*if ((.*[^)])$" | sed 's,^,\n\n,; s,: ,:1: error: probably missing { or } for conditional or loop block:\n>>>,;' | grep -e "^.*$"
-	else
-		grep -H -n  -e "^ .*if .*)$"  -e "^ .*else$"  -e "^ .* do$"  -e "^ .*while .*)$"  -e "^ .*for .*)$"  "${src}" | grep -v  -e "^.*//"  -e "^.*:.*: .*if ((.*[^)])$" | sed 's,^,\n\n,; s,: ,:1: error: probably missing { or } for conditional or loop block:\n>>>,;' | grep -q -e "^.*$"
-	fi;
-	if [ "${?}" -ne 1 ]; then
-		# ... and only print the filename
-		test -z "${LIST}" || echo "${src}"
-		ret=1;
 	fi;
 	return "${ret}"
 }
@@ -194,6 +179,7 @@ elif [ "${cmd}" = "build" ]; then
 	docker_cmd="run  --rm  builder  make  build-all  OUT=${OUT}"
 elif [ "${cmd}" = "clean" ]; then
 	docker  rmi  ironos-builder:latest
+	docker  system  prune  --filter label=ironos-builder:latest  --force
 	exit "${?}"
 else
 	usage

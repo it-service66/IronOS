@@ -1283,15 +1283,28 @@ def get_translation_sanity_checks_text(defs: dict) -> str:
 
 
 def get_version_suffix(ver) -> str:
+    # Check env var from push.yml first:
+    # - if it's pull request then use vX.YY + C.ID for version line as in *C*I with proper tag instead of merge tag for detached tree
+    if os.environ.get("GITHUB_CI_PR_SHA", "") != "":
+        return "C" + "." + os.environ["GITHUB_CI_PR_SHA"][:8].upper()
+    # - no github PR SHA ID, hence keep checking
+
     suffix = str("")
+
     try:
         # Use commands _hoping_ they won't be too new for one environments nor deprecated for another ones:
         ## - get commit id; --short=8 - the shorted hash with 8 digits (increase/decrease if needed!)
         sha_id = f"{subprocess.check_output(['git', 'rev-parse', '--short=8', 'HEAD']).strip().decode('ascii').upper()}"
         ## - if the exact commit relates to tag, then this command should return one-line tag name:
         tag = f"{subprocess.check_output(['git', 'tag', '--points-at', '%s' % sha_id]).strip().decode('ascii')}"
-        ## - get short "traditional" branch name (as in `git branch` for that one with asterisk):
-        branch = f"{subprocess.check_output(['git', 'symbolic-ref', '--short', 'HEAD']).strip().decode('ascii')}"
+        if (
+            f"{subprocess.check_output(['git', 'rev-parse', '--symbolic-full-name', '--short', 'HEAD']).strip().decode('ascii')}"
+            == "HEAD"
+        ):
+            return "E" + "." + sha_id
+        else:
+            ## - get short "traditional" branch name (as in `git branch` for that one with asterisk):
+            branch = f"{subprocess.check_output(['git', 'symbolic-ref', '--short', 'HEAD']).strip().decode('ascii')}"
         if tag and "" != tag:
             # _Speculate_ on tag that it's Release...
             if ver == tag:
@@ -1318,9 +1331,11 @@ def get_version_suffix(ver) -> str:
     except OSError:
         # Something _special_?
         suffix = "S"
+
     if "" == suffix:
         # Something _very_ special!
         suffix = "V"
+
     return suffix
 
 

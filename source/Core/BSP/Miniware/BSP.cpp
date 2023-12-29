@@ -207,8 +207,9 @@ void unstick_I2C() {
     HAL_GPIO_WritePin(SCL_GPIO_Port, SCL_Pin, GPIO_PIN_SET);
 
     timeout_cnt++;
-    if (timeout_cnt > timeout)
+    if (timeout_cnt > timeout) {
       return;
+    }
   }
 
   // 12. Configure the SCL and SDA I/Os as Alternate function Open-Drain.
@@ -285,6 +286,7 @@ void performTipResistanceSampleReading() {
 
   tipResistanceReadingSlot++;
 }
+bool tipShorted = false;
 void FinishMeasureTipResistance() {
 
   // Otherwise we now have the 4 samples;
@@ -304,6 +306,8 @@ void FinishMeasureTipResistance() {
     // return; // Change nothing as probably disconnected tip
     tipResistanceReadingSlot = lastTipResistance = 0;
     return;
+  } else if (reading < 200) {
+    tipShorted = true;
   } else if (reading < 800) {
     newRes = 62;
   } else {
@@ -373,7 +377,7 @@ uint64_t getDeviceID() {
 
 uint8_t preStartChecksDone() {
 #ifdef TIP_RESISTANCE_SENSE_Pin
-  return (lastTipResistance == 0 || tipResistanceReadingSlot < numTipResistanceReadings || tipMeasurementOccuring) ? 0 : 1;
+  return (lastTipResistance == 0 || tipResistanceReadingSlot < numTipResistanceReadings || tipMeasurementOccuring || tipShorted) ? 0 : 1;
 #else
   return 1;
 #endif
@@ -388,8 +392,12 @@ uint8_t getTipResistanceX10() {
   return TIP_RESISTANCE;
 #endif
 }
-
-uint8_t getTipThermalMass() {
+#ifdef TIP_RESISTANCE_SENSE_Pin
+bool isTipShorted() { return tipShorted; }
+#else
+bool isTipShorted() { return false; }
+#endif
+uint16_t getTipThermalMass() {
 #ifdef TIP_RESISTANCE_SENSE_Pin
   if (lastTipResistance >= 80) {
     return TIP_THERMAL_MASS;
@@ -399,7 +407,7 @@ uint8_t getTipThermalMass() {
   return TIP_THERMAL_MASS;
 #endif
 }
-uint8_t getTipInertia() {
+uint16_t getTipInertia() {
 #ifdef TIP_RESISTANCE_SENSE_Pin
   if (lastTipResistance >= 80) {
     return TIP_THERMAL_MASS;

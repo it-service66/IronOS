@@ -27,7 +27,7 @@ bool         pdbs_dpm_evaluate_capability(const pd_msg *capabilities, pd_msg *re
 void         pdbs_dpm_get_sink_capability(pd_msg *cap, const bool isPD3);
 bool         EPREvaluateCapabilityFunc(const epr_pd_msg *capabilities, pd_msg *request);
 FUSB302      fusb((0x22 << 1), fusb_read_buf, fusb_write_buf, ms_delay); // Create FUSB driver
-PolicyEngine pe(fusb, get_ms_timestamp, ms_delay, pdbs_dpm_get_sink_capability, pdbs_dpm_evaluate_capability, EPREvaluateCapabilityFunc, 140);
+PolicyEngine pe(fusb, get_ms_timestamp, ms_delay, pdbs_dpm_get_sink_capability, pdbs_dpm_evaluate_capability, EPREvaluateCapabilityFunc, USB_PD_EPR_WATTAGE);
 int          USBPowerDelivery::detectionState = 0;
 uint16_t     requested_voltage_mv             = 0;
 
@@ -46,7 +46,8 @@ void    USBPowerDelivery::IRQOccured() { pe.IRQOccured(); }
 bool    USBPowerDelivery::negotiationHasWorked() { return pe.pdHasNegotiated(); }
 uint8_t USBPowerDelivery::getStateNumber() { return pe.currentStateCode(true); }
 void    USBPowerDelivery::step() {
-  while (pe.thread()) {}
+  while (pe.thread()) {
+  }
 }
 
 void USBPowerDelivery::PPSTimerCallback() { pe.TimersCallback(); }
@@ -123,7 +124,8 @@ bool parseCapabilitiesArray(const uint8_t numCaps, uint8_t *bestIndex, uint16_t 
   *bestIndex   = 0xFF; // Mark unselected
   *bestVoltage = 5000; // Default 5V
 
-  uint8_t tipResistance = getTipResistanceX10();
+  // Fudge of 0.5 ohms to round up a little to account for us always having off periods in PWM
+  uint8_t tipResistance = getTipResistanceX10() + 5;
 #ifdef MODEL_HAS_DCDC
   // If this device has step down DC/DC inductor to smooth out current spikes
   // We can instead ignore resistance and go for max voltage we can accept; and rely on the DC/DC regulation to keep under current limit

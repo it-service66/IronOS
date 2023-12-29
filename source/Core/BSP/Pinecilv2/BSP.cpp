@@ -17,8 +17,8 @@
 
 // These control the period's of time used for the PWM
 const uint16_t powerPWM         = 255;
-const uint8_t  holdoffTicks     = 25; // This is the tick delay before temp measure starts (i.e. time for op-amp recovery)
-const uint8_t  tempMeasureTicks = 25;
+uint8_t        holdoffTicks     = 25; // This is the tick delay before temp measure starts (i.e. time for op-amp recovery)
+uint8_t        tempMeasureTicks = 25;
 
 uint16_t totalPWM = 255; // Total length of the cycle's ticks
 
@@ -160,18 +160,8 @@ uint8_t       getTipResistanceX10() {
   return lastTipResistance;
 }
 
-uint8_t getTipThermalMass() {
-  if (lastTipResistance >= 80) {
-    return TIP_THERMAL_MASS;
-  }
-  return 45;
-}
-uint8_t getTipInertia() {
-  if (lastTipResistance >= 80) {
-    return TIP_THERMAL_MASS;
-  }
-  return 10;
-}
+uint16_t getTipThermalMass() { return 120; }
+uint16_t getTipInertia() { return 750; }
 // We want to calculate lastTipResistance
 // If tip is connected, and the tip is cold and the tip is not being heated
 // We can use the GPIO to inject a small current into the tip and measure this
@@ -180,7 +170,7 @@ uint8_t getTipInertia() {
 // Which is around 0.54mA this will induce:
 // 6 ohm tip -> 3.24mV (Real world ~= 3320)
 // 8 ohm tip -> 4.32mV (Real world ~= 4500)
-// Which is definitely measureable
+// Which is definitely measurable
 // Taking shortcuts here as we know we only really have to pick apart 6 and 8 ohm tips
 // These are reported as 60 and 75 respectively
 void performTipResistanceSampleReading() {
@@ -189,7 +179,7 @@ void performTipResistanceSampleReading() {
   gpio_write(TIP_RESISTANCE_SENSE, tipResistanceReadingSlot == 0);
   tipResistanceReadingSlot++;
 }
-
+bool tipShorted = false;
 void FinishMeasureTipResistance() {
 
   // Otherwise we now have the 4 samples;
@@ -208,6 +198,8 @@ void FinishMeasureTipResistance() {
   uint8_t newRes = 0;
   if (reading > 8000) {
     // return; // Change nothing as probably disconnected tip
+  } else if (reading < 500) {
+    tipShorted = true;
   } else if (reading < 4000) {
     newRes = 62;
   } else {
@@ -217,8 +209,8 @@ void FinishMeasureTipResistance() {
 }
 volatile bool       tipMeasurementOccuring = true;
 volatile TickType_t nextTipMeasurement     = 100;
-
-void performTipMeasurementStep() {
+bool                isTipShorted() { return tipShorted; }
+void                performTipMeasurementStep() {
 
   // Wait 100ms for settle time
   if (xTaskGetTickCount() < (nextTipMeasurement)) {
@@ -240,7 +232,8 @@ uint8_t preStartChecks() {
   performTipMeasurementStep();
   return preStartChecksDone();
 }
-uint8_t preStartChecksDone() { return (lastTipResistance == 0 || tipResistanceReadingSlot < numTipResistanceReadings || tipMeasurementOccuring) ? 0 : 1; }
+// If we are still measuring the tip; or tip is shorted; prevent heating
+uint8_t preStartChecksDone() { return (lastTipResistance == 0 || tipResistanceReadingSlot < numTipResistanceReadings || tipMeasurementOccuring || tipShorted) ? 0 : 1; }
 
 // Return hardware unique ID if possible
 uint64_t getDeviceID() {

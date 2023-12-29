@@ -156,6 +156,7 @@
 #define OLED_128x32
 #define GPIO_VIBRATION
 #define POW_PD_EXT                1
+#define USB_PD_EPR_WATTAGE        0 /*No EPR*/
 #define DEBUG_POWER_MENU_BUTTON_B 1
 #define HAS_POWER_DEBUG_MENU
 #define TEMP_NTC
@@ -163,7 +164,7 @@
 #define OLED_I2CBB2
 
 #define MODEL_HAS_DCDC // We dont have DC/DC but have reallly fast PWM that gets us roughly the same place
-#endif /* S60 */
+#endif                 /* S60 */
 
 #define FLASH_LOGOADDR      (0x08000000 + (62 * 1024))
 #define SETTINGS_START_PAGE (0x08000000 + (63 * 1024))
