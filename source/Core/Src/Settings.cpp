@@ -8,12 +8,15 @@
  * devices flash
  */
 
-#include "Settings.h"
+#include "configuration.h"
+
 #include "BSP.h"
+#include "Settings.h"
 #include "Setup.h"
 #include "Translation.h"
-#include "configuration.h"
+
 #include <string.h> // for memset
+
 bool sanitiseSettings();
 
 #ifdef POW_QC_20V
@@ -90,6 +93,7 @@ static const SettingConstants settingsConstants[(int)SettingsOptions::SettingsOp
     {                     0,                                 1,                 1,                            0}, // CalibrateCJC
     {                     0,                                 1,                 1,                            0}, // BluetoothLE
     {                     0,                                 1,                 1,                            1}, // PDVpdo
+#ifdef PROFILE_SUPPORT
     {                     1,                                 5,                 1,                            4}, // ProfilePhases
     {            MIN_TEMP_C,                        MAX_TEMP_F,                 5,                           90}, // ProfilePreheatTemp
     {                     1,                                10,                 1,                            1}, // ProfilePreheatSpeed
@@ -104,8 +108,17 @@ static const SettingConstants settingsConstants[(int)SettingsOptions::SettingsOp
     {            MIN_TEMP_C,                        MAX_TEMP_F,                 5,                           90}, // ProfilePhase5Temp
     {                    10,                               180,                 5,                           30}, // ProfilePhase5Duration
     {                     1,                                10,                 1,                            2}, // ProfileCooldownSpeed
+#endif
 };
+
 static_assert((sizeof(settingsConstants) / sizeof(SettingConstants)) == ((int)SettingsOptions::SettingsOptionsLength));
+
+#ifdef PROFILE_SUPPORT
+static_assert((SettingsOptions::ProfilePhase1Temp) == 42); // TODO: REMOVE ME: TEMP. DEBUG FOR PoC
+static_assert((SettingsOptions::SettingsOptionsLength) == 53);
+#else
+static_assert((SettingsOptions::SettingsOptionsLength) == 39);
+#endif
 
 void saveSettings() {
 #ifdef CANT_DIRECT_READ_SETTINGS

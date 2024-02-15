@@ -1,6 +1,7 @@
-
 #include "OperatingModes.h"
 #include "SolderingCommon.h"
+
+#ifdef PROFILE_SUPPORT
 
 extern OperatingMode currentMode;
 
@@ -221,3 +222,5 @@ void gui_solderingProfileMode() {
     GUIDelay();
   }
 }
+
+#endif /* PROFILE_SUPPORT */
