@@ -4,6 +4,11 @@ extern osThreadId    MOVTaskHandle;
 extern osThreadId    PIDTaskHandle;
 extern OperatingMode currentMode;
 
+#ifdef MODEL_Pinecilv2
+#include "bl702_adc.h"
+extern ADC_Gain_Coeff_Type adcGainCoeffCal;
+#endif
+
 void showDebugMenu(void) {
   currentMode        = OperatingMode::debug;
   uint8_t     screen = 0;
@@ -88,6 +93,18 @@ void showDebugMenu(void) {
       OLED::printNumber(hallEffectStrength, 6, FontStyle::SMALL);
     } break;
 #endif
+#ifdef MODEL_Pinecilv2
+    case 17: {
+      if (adcGainCoeffCal.adcGainCoeffEnable) {
+        const int32_t coe_x10000 = (int)(adcGainCoeffCal.coe * 10000 + 0.5);
+        OLED::printNumber(coe_x10000 / 10000, 3, FontStyle::SMALL);
+        OLED::print(SymbolDot, FontStyle::SMALL);
+        OLED::printNumber(coe_x10000 % 10000, 4, FontStyle::SMALL, false);
+      } else {
+        OLED::print(translatedString(Tr->OffString), FontStyle::SMALL);
+      }
+    } break;
+#endif
 
     default:
       break;
@@ -99,11 +116,15 @@ void showDebugMenu(void) {
       return;
     } else if (b == BUTTON_F_SHORT) {
       screen++;
-#ifdef HALL_SENSOR
-      screen = screen % 17;
-#else
-      screen = screen % 16;
+#ifndef HALL_SENSOR
+      if (screen == 16)
+        screen = 17;
 #endif
+#ifndef MODEL_Pinecilv2
+      if (screen == 17)
+        screen = 18;
+#endif
+      screen = screen % 18;
     }
 
     GUIDelay();
